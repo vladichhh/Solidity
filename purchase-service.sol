@@ -2,12 +2,14 @@ pragma solidity ^0.4.18;
 
 contract Service {
     
-    uint constant private servicePrice = 1 ether;
-    uint constant private withdrawAmountLimit = 5 ether;
+    uint constant internal SERVICE_PRICE = 1 ether;
+    uint constant internal WITHDRAW_AMOUNT_LIMIT = 5 ether;
     
     address private owner;
     uint private lastPurchase;
     uint private lastWithdraw;
+    
+    event LogPurchase(address indexed buyer, uint returnAmount);
     
     modifier onlyOwner() {
         require(msg.sender == owner);
@@ -29,8 +31,6 @@ contract Service {
         _;
     }
     
-    event Purchase(address indexed buyer, uint returnAmount);
-    
     function Service() public {
         owner = msg.sender;
     }
@@ -40,27 +40,25 @@ contract Service {
     }
     
     function purchase() public payable purchaseLock {
-        address buyer = msg.sender;
-        uint payedPrice = msg.value;
         uint balanceBeforeTransfer;
         uint returnAmount;
         
-        require(payedPrice >= servicePrice);
+        require(msg.value >= SERVICE_PRICE);
         
-        if (payedPrice > servicePrice) {
-            returnAmount = payedPrice - servicePrice;
-            buyer.transfer(returnAmount);
+        if (msg.value > SERVICE_PRICE) {
+            returnAmount = msg.value - SERVICE_PRICE;
+            msg.sender.transfer(returnAmount);
         }
         
         assert(this.balance == balanceBeforeTransfer - returnAmount);
         
-        Purchase(buyer, returnAmount);
+        LogPurchase(msg.sender, returnAmount);
     }
     
     function withdraw() public onlyOwner withdrawLock positiveBalance {
         uint balanceBeforeWithdraw;
-        uint withdrawAmount = (this.balance >= withdrawAmountLimit) 
-            ? withdrawAmountLimit : this.balance;
+        uint withdrawAmount = (this.balance >= WITHDRAW_AMOUNT_LIMIT) 
+            ? WITHDRAW_AMOUNT_LIMIT : this.balance;
         
         owner.transfer(withdrawAmount);
         
