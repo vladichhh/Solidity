@@ -4,6 +4,8 @@ contract Service {
     
     uint constant internal SERVICE_PRICE = 1 ether;
     uint constant internal WITHDRAW_AMOUNT_LIMIT = 5 ether;
+    uint constant internal PURCHASE_LOCK_TIME = 2 minutes;
+    uint constant internal WITHDRAW_LOCK_TIME = 1 hours;
     
     address private owner;
     uint private lastPurchase;
@@ -17,17 +19,17 @@ contract Service {
     }
     
     modifier purchaseLock() {
-        require(now >= lastPurchase + 2 minutes);
+        require(now >= lastPurchase + PURCHASE_LOCK_TIME);
         _;
     }
     
     modifier withdrawLock() {
-        require(now >= lastWithdraw + 1 hours);
+        require(now >= lastWithdraw + WITHDRAW_LOCK_TIME);
         _;
     }
     
     modifier positiveBalance() {
-        require(this.balance > 0 ether);
+        require(this.balance > 0);
         _;
     }
     
