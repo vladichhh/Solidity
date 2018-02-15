@@ -8,10 +8,10 @@ contract Service {
     uint constant internal WITHDRAW_LOCK_TIME = 1 hours;
     
     address private owner;
-    uint private lastPurchase;
-    uint private lastWithdraw;
+    uint256 private lastPurchase;
+    uint256 private lastWithdraw;
     
-    event LogPurchase(address indexed buyer, uint returnAmount);
+    event LogPurchase(address indexed buyer, uint256 returnAmount);
     
     modifier onlyOwner() {
         require(msg.sender == owner);
@@ -37,13 +37,13 @@ contract Service {
         owner = msg.sender;
     }
     
-    function getBalance() public view returns (uint) {
+    function getBalance() public view returns (uint256) {
         return this.balance;
     }
     
     function purchase() public payable purchaseLock {
-        uint balanceBeforeTransfer;
-        uint returnAmount;
+        uint256 balanceBeforeTransfer;
+        uint256 returnAmount;
         
         require(msg.value >= SERVICE_PRICE);
         
@@ -58,8 +58,8 @@ contract Service {
     }
     
     function withdraw() public onlyOwner withdrawLock positiveBalance {
-        uint balanceBeforeWithdraw;
-        uint withdrawAmount = (this.balance >= WITHDRAW_AMOUNT_LIMIT) 
+        uint256 balanceBeforeWithdraw;
+        uint256 withdrawAmount = (this.balance >= WITHDRAW_AMOUNT_LIMIT) 
             ? WITHDRAW_AMOUNT_LIMIT : this.balance;
         
         owner.transfer(withdrawAmount);
