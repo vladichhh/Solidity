@@ -2,9 +2,9 @@ pragma solidity ^0.4.18;
 
 contract MathFunctions {
     
-    int private x = 0;
+    int256 private x = 0;
     
-    function get() public view returns (int) {
+    function get() public view returns (int256) {
         return x;
     }
     
@@ -12,39 +12,39 @@ contract MathFunctions {
         x = 0;
     }
     
-    function add(int y) public returns (int) {
+    function add(int256 y) public returns (int256) {
         x += y;
         return x;
     }
     
-    function substract(int y) public returns (int) {
+    function substract(int256 y) public returns (int256) {
         x -= y;
         return x;
     }
     
-    function multiply(int y) public returns (int) {
+    function multiply(int256 y) public returns (int256) {
         x *= y;
         return x;
     }
     
-    function divide(int y) public returns (int) {
+    function divide(int256 y) public returns (int256) {
         x /= y;
         return x;
     }
     
-    function remainder(int y) public returns (int) {
+    function remainder(int256 y) public returns (int256) {
         x %= y;
         return x;
     }
     
-    function power(uint y) public returns (int) {
+    function power(uint256 y) public returns (int256) {
         bool positive = x >= 0; 
         
         if (!positive) {
             x *= -1;
         }
         
-        x = int(uint(x) ** y);
+        x = int256(uint256(x) ** y);
         
         if (!positive && (y % 2 != 0)) {
             x *= -1;
