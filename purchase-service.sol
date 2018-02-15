@@ -2,10 +2,10 @@ pragma solidity ^0.4.18;
 
 contract Service {
     
-    uint constant internal SERVICE_PRICE = 1 ether;
-    uint constant internal WITHDRAW_AMOUNT_LIMIT = 5 ether;
-    uint constant internal PURCHASE_LOCK_TIME = 2 minutes;
-    uint constant internal WITHDRAW_LOCK_TIME = 1 hours;
+    uint256 constant internal SERVICE_PRICE = 1 ether;
+    uint256 constant internal WITHDRAW_AMOUNT_LIMIT = 5 ether;
+    uint256 constant internal PURCHASE_LOCK_TIME = 2 minutes;
+    uint256 constant internal WITHDRAW_LOCK_TIME = 1 hours;
     
     address private owner;
     uint256 private lastPurchase;
