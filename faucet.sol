@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 contract Faucet {
     
     address private owner;
-    uint private sendAmount;
+    uint256 private sendAmount;
     
     event LogWithdraw(address recipient, uint256 amount);
     
