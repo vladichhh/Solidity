@@ -21,9 +21,12 @@ contract MathUser {
     }
     
     function tempContract(address helperAddress) public returns (MathHelper) {
+        // option 1
         MathHelper helper = MathHelper(helperAddress);
-        
         result = helper.add(7, 8);
+        
+        // option 2
+        result = MathHelper(helperAddress).add(7, 8);
         
         return helper;
     }
