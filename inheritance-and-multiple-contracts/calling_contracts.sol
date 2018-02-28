@@ -28,6 +28,9 @@ contract MathUser {
         // option 2
         result = MathHelper(helperAddress).add(7, 8);
         
+        // option 3
+        result = helperAddress.add(7, 8);
+        
         return helper;
     }
     
