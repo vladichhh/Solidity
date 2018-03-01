@@ -1,0 +1,27 @@
+pragma solidity ^0.4.18;
+
+contract Parent {
+    
+    uint public a;
+    
+    function Parent(uint meaningOfLife) public {
+        a = meaningOfLife;
+    }
+    
+}
+
+// constructor arguments can be passed in the child contract declaration
+contract ChildA is Parent(42) {
+    
+    // ...
+
+}
+
+contract ChildB is Parent {
+    
+    // constructor arguments can be passed in the child's constructor declaration
+    function ChildB(uint num) Parent(num * 3) public {
+        // ...
+    }
+    
+}
