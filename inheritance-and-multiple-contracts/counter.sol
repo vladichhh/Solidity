@@ -47,8 +47,12 @@ contract SafeMath {
 
 contract Counter is Owned, SafeMath {
     
-    uint256 public state;
-    uint256 lastChange = now;
+    uint256 state;
+    uint256 lastChange;
+    
+    function Counter() public {
+        lastChange = now;
+    }
     
     function changeState() public onlyOwner {
         state = add(state, now % 256);
