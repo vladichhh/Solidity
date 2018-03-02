@@ -13,7 +13,7 @@ contract Owned {
         owner = msg.sender;
     }
     
-    function changeOwnership(address _owner) public {
+    function changeOwnership(address _owner) public onlyOwner {
         owner = _owner;
     }
     
@@ -33,14 +33,12 @@ contract SafeMath {
     }
     
     function multiply(uint256 a, uint256 b) public pure returns (uint256) {
-        uint256 c;
-        
-        if (a == 0 || b == 0) {
+        if (a == 0) {
             return 0;
-        } else {
-            c = a * b;
-            assert(a == c / b);
         }
+        
+        uint256 c = a * b;
+        assert(b == c / a);
         
         return c;
     }
