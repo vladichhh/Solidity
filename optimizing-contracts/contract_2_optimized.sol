@@ -82,7 +82,7 @@ contract Voting {
         
         nVoters = (_voters.length % 2 == 0) ? _voters.length : _voters.length + 1;
         
-        for (uint i = 0; i < _voters.length; i++) {
+        for (uint i=0; i<_voters.length; i++) {
             voters[_voters[i]] = true;
         }
         
@@ -95,7 +95,7 @@ contract Voting {
         votes[voteId] = VotingLib.Vote({id: voteId,
                                         votesFor: 0,
                                         votesAgainst: 0,
-                                        target: nVoters / 2,
+                                        target: nVoters/2,
                                         finished: false,
                                         successful: false});
         
