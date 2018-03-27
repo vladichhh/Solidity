@@ -10,9 +10,9 @@ contract AbstractMarketplace {
     function getPrice(bytes32 productId, uint256 quantity) public view returns (uint256);
     function withdraw() public;
     
-    event ProductAdded(bytes32 indexed productId, string name, uint256 price, uint256 quantity);
-    event ProductUpdated(bytes32 indexed productId, uint256 quantity);
-    event ProductPurchased(bytes32 indexed productId, uint256 quantity);
-    event Withdrawal(uint256 amount);
+    event ProductAdded(bytes32 indexed productId, string name, uint256 price, uint256 quantity, uint256 timestamp);
+    event ProductUpdated(bytes32 indexed productId, uint256 quantity, uint256 timestamp);
+    event ProductPurchased(bytes32 indexed productId, uint256 quantity, uint256 timestamp);
+    event Withdrawal(uint256 amount, uint256 timestamp);
     
 }
