@@ -5,10 +5,10 @@ contract('Destructible [unit tests]', async (accounts) => {
 	let instance
 	let contract;
 
-    beforeEach('setup contract for each test', async function () {
-        instance = await Destructible.new({from: accounts[0], value: web3.toWei('10', 'ether')});
+	beforeEach('setup contract for each test', async function () {
+		instance = await Destructible.new({from: accounts[0], value: web3.toWei('10', 'ether')});
 		contract = instance.address;
-    });
+	});
 	
 	it('should create the contract with initial balance of 10 ethers', async function () {
 		let initContractBalance = web3.eth.getBalance(contract);
