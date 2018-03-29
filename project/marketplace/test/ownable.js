@@ -5,10 +5,10 @@ contract('Ownable [unit tests]', async (accounts) => {
 	let instance;
 	let owner;
 
-    beforeEach('setup contract for each test', async function () {
-        instance = await Ownable.new({from: accounts[0]});
+	beforeEach('setup contract for each test', async function () {
+		instance = await Ownable.new({from: accounts[0]});
 		owner = await instance.owner.call();
-    });
+	});
 	
 	it("should check if the contract has an owner", async () => {
 		assert.notEqual(owner, 0, "The contract does not have an owner");
