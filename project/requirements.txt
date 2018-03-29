@@ -17,8 +17,7 @@ Optional Tasks
  (5%) (lecture 5) Use contract events to signify that an activity has taken place in your contract. Events can
 be for item purchase / stock update (Marketplace), for example.
  (20%) (lecture 8) Create a basic website with MetaMask that connects to a contract (published in a test net
-or local blockchain). The application should allow at least one operation with the contract (Domain
-registration or Store purchase are examples).
+or local blockchain). The application should allow at least one operation with the contract (store purchase for example).
  (5%) (lecture 6) Dynamic pricing. For Marketplace, price can increase as the stock of an item lowers.
  (5%) (lecture 6) Public method to withdraw the funds from the contract. This should be called only from the
 contract owner (the address which initially created the contract).
