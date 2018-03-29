@@ -5,9 +5,9 @@ contract('Marketplace [unit tests]', async (accounts) => {
 	let instance;
 	let productId = "0x78c526e417603a7d506203ad658e0c3617aa7b9bf15946300d5ac1354fe5ab4b";
 
-    beforeEach('setup contract for each test', async function () {
-        instance = await Marketplace.new(accounts[0]);
-    });
+	beforeEach('setup contract for each test', async function () {
+		instance = await Marketplace.new(accounts[0]);
+	});
 	
 	// ============================================================================================
 	// ==========================================   GET   =========================================
