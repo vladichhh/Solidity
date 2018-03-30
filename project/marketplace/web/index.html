@@ -2,19 +2,27 @@
 	<head>
 		<script type="text/javascript" src="script.js"></script>
 	</head>
-	<body align=center>
+	<body>
+	<div align="center">
 	<br><br><br>
 	<p id="message">Marketplace DAPP</p><br>
-	<input type="text" id="input1"><br><br>
-	<input type="text" id="input2"><br><br>
-	<input type="text" id="input3"><br><br>
+	<input id="input1" type="text"><br><br>
+	<input id="input2" type="text"><br><br>
+	<input id="input3" type="text"><br><br>
+	<p id="products"></p>
+	<table>
+		<tr>
+			<td><input type="button" onclick="onGetBalance()" value="Get balance"></td>
+			<td><input type="button" onclick="onAddProduct()" value="Add product"></td>
+			<td><input type="button" onclick="onGetProduct()" value="Get product"></td>
+			<td><input type="button" onclick="onGetAllProducts()" value="Get all products"></td>
+			<td><input type="button" onclick="onGetPrice()" value="Get price"></td>
+			<td><input type="button" onclick="onBuyProduct()" value="Buy product"></td>
+			<td><input type="button" onclick="onWithdraw()" value="Withdraw"></td>
+		</tr>
+	</table>
 	<br>
-	<input type="button" onclick="onGetBalance()" value="Get balance">
-	<br><br>
-	<input type="button" onclick="onAddApple()" value="Add product">
-	<br><br>
-	<input type="button" onclick="onGetProduct()" value="Get product">
-	<br><br>
-	<input type="button" onclick="onBuyProduct()" value="Buy product">
-	<br><br>
+	<input type="button" onclick="onReset()" value="Reset">
+	</div>
+	</body>
 </html>

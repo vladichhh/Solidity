@@ -32,28 +32,39 @@ function displayMessage(message) {
 	el.innerHTML = message;
 }
 
+function displayProducts(productList) {
+	var productArr = productList.toString().split(",");
+	var output = "";
+
+	for (var i=0; i<productArr.length; i++) {
+		output = output.concat(productArr[i]) + "<br>";
+	}
+
+	var el = document.getElementById("products");
+	el.innerHTML = output;s
+}
+
 function getTextInput1() {
-	var el = document.getElementById("input1");
-	return el.value;
+	return document.getElementById("input1").value;
 }
 
 function getTextInput2() {
-	var el = document.getElementById("input2");
-	return el.value;
+	return document.getElementById("input2").value;
 }
 
 function getTextInput3() {
-	var el = document.getElementById("input3");
-	return el.value;
+	return document.getElementById("input3").value;
 }
 
 
 function onGetBalance() {
 	updateAccount();
+	onReset();
 
 	contractInstance.getBalance.call({"from": acc}, function(err, res) {
 		if (!err) {
-			displayMessage("Contract balance: " + res);
+			displayMessage("Contract balance");
+			document.getElementById("input1").value = web3.fromWei(res, 'ether') + " ether(s)";
 		} else {
 			displayMessage("Something went wrong.");
 			console.error(err);
@@ -61,7 +72,7 @@ function onGetBalance() {
 	});
 }
 
-function onAddApple() {
+function onAddProduct() {
 	updateAccount();
 
 	var input1 = getTextInput1();
@@ -82,14 +93,15 @@ function onGetProduct() {
 	updateAccount();
 
 	var input = getTextInput1();
-	
 	var isProductId = input.startsWith("0x");
-	// 0x78c526e417603a7d506203ad658e0c3617aa7b9bf15946300d5ac1354fe5ab4b
 
 	if (isProductId) {
 		contractInstance.getProduct.call(input, {"from": acc}, function(err, res) {
 			if (!err) {
-				displayMessage("Product details: " + res);
+				document.getElementById("input1").value = res[0];
+				document.getElementById("input2").value = web3.fromWei(res[1], 'ether') + " ether(s)";
+				document.getElementById("input3").value = res[2];
+				displayMessage("Product details");
 			} else {
 				displayMessage("Something went wrong.");
 				console.error(err);
@@ -100,12 +112,46 @@ function onGetProduct() {
 	}
 }
 
+function onGetAllProducts() {
+	updateAccount();
+	onReset();
+
+	contractInstance.getProducts.call({"from": acc}, function(err, res) {
+		if (!err) {
+			displayProducts(res);
+		} else {
+			displayMessage("Something went wrong.");
+			console.error(err);
+		}
+	});
+}
+
+function onGetPrice() {
+	updateAccount();
+	
+	var input1 = getTextInput1();
+	var input2 = getTextInput2();
+	
+	onReset();
+	
+	contractInstance.getPrice.call(input1, input2, {"from": acc}, function(err, res) {
+		if (!err) {
+			document.getElementById("input1").value = web3.fromWei(res, 'ether') + " ether(s)";
+		} else {
+			displayMessage("Something went wrong.");
+			console.error(err);
+		}
+	});
+}
+
 function onBuyProduct() {
 	updateAccount();
 
 	var input1 = getTextInput1();
 	var input2 = getTextInput2();
 	var input3 = getTextInput3();
+	
+	onReset();
 
 	contractInstance.buy(input1, input2, {"from": acc, value: web3.toWei(input3, 'ether')}, function(err, res) {
 		if (!err) {
@@ -115,4 +161,28 @@ function onBuyProduct() {
 			console.error(err);
 		}
 	});
+}
+
+function onWithdraw() {
+	updateAccount();
+	onReset();
+	
+	contractInstance.withdraw({"from": acc}, function(err, res) {
+		if (!err) {
+			displayMessage("Success! Transaction hash: " + res.valueOf());
+		} else {
+			displayMessage("Something went wrong.");
+			console.error(err);
+		}
+	});
+
+}
+
+function onReset() {
+	displayMessage("Welcome to Marketplace DAPP!");
+
+	document.getElementById("input1").value = "";
+	document.getElementById("input2").value = "";
+	document.getElementById("input3").value = "";
+	document.getElementById("products").innerHTML = "";
 }
