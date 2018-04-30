@@ -2,7 +2,7 @@ pragma solidity 0.4.19;
 
 contract Ownable {
     
-    event OwnershipTransferred(address previousOwner, address newOwner, uint256 timestamp);
+    event OwnershipTransferred(address previousOwner, address newOwner);
     
     address public owner;
     
@@ -19,7 +19,7 @@ contract Ownable {
         require(newOwner != address(0));
         
         // log event
-        OwnershipTransferred(owner, newOwner, now);
+        OwnershipTransferred(owner, newOwner);
         
         // updates the owner
         owner = newOwner;
@@ -86,25 +86,20 @@ library ProductLib {
         bool exists;
     }
     
-    function createProduct(string _name, uint256 _price, uint256 _quantity) internal pure returns (Product) {
-        // converts the price from Eth to Wei
-        return Product({name: _name, price: toWei(_price), quantity: _quantity, exists: true});
+    function createProduct(string name, uint256 price, uint256 quantity) internal pure returns (Product) {
+        return Product({name: name, price: price, quantity: quantity, exists: true});
     }
     
-    function updateProduct(Product storage self, uint256 _quantity) internal {
-        self.quantity = _quantity;
+    function updateProduct(Product storage self, uint256 quantity) internal {
+        self.quantity = quantity;
     }
     
-    function calculatePrice(Product storage self, uint256 _quantity) internal view returns (uint256) {
-        return self.price.mul(_quantity);
+    function calculatePrice(Product storage self, uint256 quantity) internal view returns (uint256) {
+        return self.price.mul(quantity);
     }
     
-    function buyProduct(Product storage self, uint256 _quantity) internal {
-        self.quantity = self.quantity.sub(_quantity);
-    }
-    
-    function toWei(uint256 value) internal pure returns (uint256) {
-        return value.mul(1000000000000000000);
+    function buyProduct(Product storage self, uint256 quantity) internal {
+        self.quantity = self.quantity.sub(quantity);
     }
     
 }
@@ -120,10 +115,10 @@ contract AbstractMarketplace {
     function buy(bytes32 productId, uint256 quantity) public payable;
     function withdraw() public;
     
-    event ProductAdded(bytes32 indexed productId, string name, uint256 price, uint256 quantity, uint256 timestamp);
-    event ProductPurchased(bytes32 indexed productId, uint256 price, uint256 quantity, uint256 timestamp);
-    event ProductUpdated(bytes32 indexed productId, uint256 initQuantity, uint256 newQuantity, uint256 timestamp);
-    event Withdrawal(uint256 amount, uint256 timestamp);
+    event ProductAdded(bytes32 indexed productId, string name, uint256 price, uint256 quantity);
+    event ProductPurchased(bytes32 indexed productId, address buyer, uint256 quantity, uint256 price);
+    event ProductUpdated(bytes32 indexed productId, uint256 newQuantity);
+    event Withdrawal(uint256 amount);
     
 }
 
@@ -159,25 +154,28 @@ contract Marketplace is Ownable, Destructible, AbstractMarketplace {
     }
     
     /**
-     * Adds a new product to the Marketplace by specifying its name, price and initial quantity. Function 
-     * is called only from the contract owner.
+     * Adds a new product to the Marketplace by specifying its name, price and initial 
+     * quantity. Function is called only from the contract owner.
      */
-    function newProduct(string name, uint256 price, uint256 quantity) public onlyOwner returns (bytes32) {
+    function newProduct(string name, uint256 price, uint256 quantity) public onlyOwner 
+                returns (bytes32) {
+        
         require(price > 0);
         
         // callculate product id
-        bytes32 productId = keccak256(name, price, quantity);
+        bytes32 productId = keccak256(name, price, quantity, now);
         
         // product should not exist already
         require(!products[productId].exists);
         
-        // using ProductLib
-        products[productId] = ProductLib.createProduct(name, price, quantity);
-        
+        products[productId] = ProductLib.Product({name: name,
+                                                  price: price,
+                                                  quantity: quantity, 
+                                                  exists: true});
         productIds.push(productId);
         
         // log event
-        ProductAdded(productId, name, price, quantity, now);
+        ProductAdded(productId, name, price, quantity);
         
         return productId;
     }
@@ -203,53 +201,43 @@ contract Marketplace is Ownable, Destructible, AbstractMarketplace {
     /**
      * Calculates the price to be paied for the specified quantitity of a certain product.
      */
-    function getPrice(bytes32 productId, uint256 quantity) public view 
-                productExists(productId) returns (uint256) {
+    function getPrice(bytes32 productId, uint256 quantity) public view productExists(productId) 
+                returns (uint256) {
         
         // using ProductLib
         return products[productId].calculatePrice(quantity);
     }
     
      /**
-     * Updates the stock of an item by taking its id and the new availability (items in stock). Function 
-     * is called only from the contract owner.
+     * Updates the stock of an item by taking its id and the new availability (items in 
+     * stock). Function is called only from the contract owner.
      */
     function update(bytes32 productId, uint256 newQuantity) public onlyOwner productExists(productId) {
-        uint256 initQuantity = products[productId].quantity;
-        
         // using ProductLib
         products[productId].updateProduct(newQuantity);
         
         // log event
-        ProductUpdated(productId, initQuantity, newQuantity, now);
+        ProductUpdated(productId, newQuantity);
     }
     
     /**
-     * Buys a store item by specifying its id and quantity. The method should execute successfully 
-     * if the Marketplace has enough of the item in stock and the sent funds are sufficient. Overpay 
-     * is considered a tip.
+     * Buys a store item by specifying its id and quantity. The method should execute 
+     * successfully if the Marketplace has enough of the item in stock and the sent funds
+     * are sufficient. Overpay is considered a tip.
      */
     function buy(bytes32 productId, uint256 quantity) public payable productExists(productId) 
                 hasValue hasQuantity(productId, quantity) {
         
         // calculate the amount required to buy the requested quantity
-        uint256 requiredAmount = products[productId].calculatePrice(quantity);
+        uint256 amountToPay = getPrice(productId, quantity);
         
-        require(msg.value >= requiredAmount);
+        require(msg.value >= amountToPay);
         
         // using ProductLib
         products[productId].buyProduct(quantity);
         
         // log event
-        ProductPurchased(productId, products[productId].price, quantity, now);
-        
-        // calculate the amount to be returned
-        uint256 returnAmount = msg.value.sub(requiredAmount);
-        
-        if (returnAmount > 0) {
-            // execute the transfer
-            msg.sender.transfer(returnAmount);
-        }
+        ProductPurchased(productId, msg.sender, quantity, amountToPay);
     }
     
     /**
@@ -260,11 +248,11 @@ contract Marketplace is Ownable, Destructible, AbstractMarketplace {
         
         uint256 amount = this.balance;
         
-        // execute the tranfer
+        // execute the transfer
         owner.transfer(amount);
         
         // log event
-        Withdrawal(amount, now);
+        Withdrawal(amount);
     }
     
 }
