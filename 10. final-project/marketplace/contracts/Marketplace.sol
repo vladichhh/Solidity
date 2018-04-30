@@ -277,6 +277,7 @@ contract AbstractExtendedMarketplace {
         address secondBuyer;
         bytes32 productId;
         uint256 quantity;
+        uint256 price;
         uint256 paied;
         uint256 toPay;
         PurchaseState state;
@@ -357,6 +358,7 @@ contract ExtendedMarketplace is Marketplace, AbstractExtendedMarketplace {
                                           secondBuyer: secondBuyer,
                                           productId: productId,
                                           quantity: quantity,
+                                          price: price,
                                           paied: msg.value,
                                           toPay: price.sub(msg.value),
                                           state: PurchaseState.New,
