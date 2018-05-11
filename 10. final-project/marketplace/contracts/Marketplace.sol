@@ -86,9 +86,7 @@ library ProductLib {
         bool exists;
     }
     
-    function createProduct(string name, uint256 price, uint256 quantity) internal pure 
-                returns (Product) {
-        
+    function createProduct(string name, uint256 price, uint256 quantity) internal pure returns (Product) {
         return Product({name: name, price: price, quantity: quantity, exists: true});
     }
     
@@ -96,9 +94,7 @@ library ProductLib {
         self.quantity = quantity;
     }
     
-    function calculatePrice(Product storage self, uint256 quantity) internal view 
-                returns (uint256) {
-        
+    function calculatePrice(Product storage self, uint256 quantity) internal view returns (uint256) {
         return self.price.mul(quantity);
     }
     
@@ -303,7 +299,7 @@ contract ExtendedMarketplace is Marketplace, AbstractExtendedMarketplace {
     uint256 public constant PURCHASE_DURATION = 1 days;
     
     mapping(bytes32 => Purchase) purchases;
-    mapping(address => uint256) payments;
+    mapping(address => uint256) balances;
     
     modifier purchaseExists(bytes32 purchaseId) {
         require(purchases[purchaseId].exists);
@@ -343,8 +339,8 @@ contract ExtendedMarketplace is Marketplace, AbstractExtendedMarketplace {
         // log event
         ProductPurchased(productId, msg.sender, quantity, price);
         
-        // added payment for the address
-        payments[msg.sender] = payments[msg.sender].add(msg.value);
+        // added payment to the address balance
+        balances[msg.sender] = balances[msg.sender].add(msg.value);
         
         // generate purchase id
         bytes32 purchaseId = keccak256(msg.sender, secondBuyer, productId, quantity, price, now);
@@ -379,9 +375,9 @@ contract ExtendedMarketplace is Marketplace, AbstractExtendedMarketplace {
         products[productId].quantity = 
                 products[productId].quantity.add(purchases[purchaseId].quantity);
         
-        // update address payments before the transfer
-        payments[purchases[purchaseId].firstBuyer] = 
-                payments[purchases[purchaseId].firstBuyer].sub(purchases[purchaseId].paied);
+        // update address balance before the transfer
+        balances[purchases[purchaseId].firstBuyer] = 
+                balances[purchases[purchaseId].firstBuyer].sub(purchases[purchaseId].paied);
         
         // revert payment of the address registered purchase
         purchases[purchaseId].firstBuyer.transfer(purchases[purchaseId].paied);
@@ -398,15 +394,209 @@ contract ExtendedMarketplace is Marketplace, AbstractExtendedMarketplace {
         require(purchases[purchaseId].state == PurchaseState.New);
         require(purchases[purchaseId].dateExpiration > now);
         
-        // update payments for the address registered purchase
-        payments[purchases[purchaseId].firstBuyer] = 
-                payments[purchases[purchaseId].firstBuyer].sub(purchases[purchaseId].paied);
+        // update balance of the address registered purchase
+        balances[purchases[purchaseId].firstBuyer] = 
+                balances[purchases[purchaseId].firstBuyer].sub(purchases[purchaseId].paied);
         
          // update purchase state
         purchases[purchaseId].state = PurchaseState.Completed;
         
         // log event
         PurchaseCompleted(purchaseId);
+    }
+    
+}
+
+contract ERC20Basic {
+    
+    function totalSupply() public view returns (uint256);
+    function balanceOf(address who) public view returns (uint256);
+    function transfer(address to, uint256 value) public returns (bool);
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+}
+
+contract ERC20 is ERC20Basic {
+    
+    function allowance(address owner, address spender) public view returns (uint256);
+    function transferFrom(address from, address to, uint256 value) public returns (bool);
+    function approve(address spender, uint256 value) public returns (bool);
+    
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+  
+}
+
+contract BasicToken is ERC20 {
+    
+    using SafeMath for uint256;
+    
+    mapping(address => uint256) balances;
+    
+    uint256 nTokens;
+
+    /**
+     * @dev Total number of tokens in existence.
+     */
+    function totalSupply() public view returns (uint256) {
+        return nTokens;
+    }
+    
+    /**
+     * @dev Transfer token for a specified address.
+     * @param to The address to transfer to.
+     * @param value The amount to be transferred.
+     */
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(to != address(0));
+        require(value <= balances[msg.sender]);
+    
+        balances[msg.sender] = balances[msg.sender].sub(value);
+        balances[to] = balances[to].add(value);
+        
+        Transfer(msg.sender, to, value);
+        
+        return true;
+    }
+    
+    /**
+     * @dev Gets the balance of the specified address.
+     * @param owner The address to query the the balance of.
+     * @return An uint256 representing the amount owned by the passed address.
+     */
+    function balanceOf(address owner) public view returns (uint256) {
+        return balances[owner];
+    }
+    
+}
+
+contract StandardToken is ERC20, BasicToken {
+    
+    mapping (address => mapping (address => uint256)) internal allowed;
+    
+    /**
+     * @dev Transfer tokens from one address to another.
+     * @param from address The address which you want to send tokens from.
+     * @param to address The address which you want to transfer to.
+     * @param value uint256 the amount of tokens to be transferred.
+     */
+    function transferFrom(address from, address to, uint256 value) public returns (bool) {
+        require(to != address(0));
+        require(value <= balances[from]);
+        require(value <= allowed[from][msg.sender]);
+    
+        balances[from] = balances[from].sub(value);
+        balances[to] = balances[to].add(value);
+        allowed[from][msg.sender] = allowed[from][msg.sender].sub(value);
+        
+        Transfer(from, to, value);
+        
+        return true;
+    }
+    
+    /**
+     * @dev Approve the passed address to spend the specified amount of tokens on behalf of msg.sender.
+     * @param spender The address which will spend the funds.
+     * @param value The amount of tokens to be spent.
+     */
+    function approve(address spender, uint256 value) public returns (bool) {
+        allowed[msg.sender][spender] = value;
+        
+        Approval(msg.sender, spender, value);
+        
+        return true;
+    }
+    
+    /**
+     * @dev Function to check the amount of tokens that an owner allowed to a spender.
+     * @param owner address The address which owns the funds.
+     * @param spender address The address which will spend the funds.
+     * @return A uint256 specifying the amount of tokens still available for the spender.
+     */
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return allowed[owner][spender];
+    }
+    
+}
+
+contract VHToken is StandardToken {
+    
+    string public constant name = 'VH Token';
+    string public constant symbol = 'VHT';
+    uint256 public constant initialSupply = 1000000;
+
+    function VHToken() public {
+        nTokens = initialSupply;
+        balances[msg.sender] = initialSupply;
+        
+        Transfer(address(0), msg.sender, initialSupply);
+    }
+    
+}
+
+contract AdvancedMarketplace is ExtendedMarketplace {
+    
+    ERC20TokenRateOracle public oracle;
+    
+    mapping(address => bool) public supportedTokens;
+    
+    modifier tokenSupported(address ERC20TokenAddr) {
+        require(supportedTokens[ERC20TokenAddr]);
+        _;
+    }
+    
+    function addSupportedToken(address ERC20TokenAddr) public {
+        supportedTokens[ERC20TokenAddr] = true;
+    }
+
+    function buyWithTokens(bytes32 productId, uint256 quantity, address ERC20TokenAddr) public
+        productExists(productId) hasQuantity(productId, quantity) tokenSupported(ERC20TokenAddr) {
+        
+        StandardToken ERC20Token = StandardToken(ERC20TokenAddr);
+        
+        // calculate the amount required to buy the requested quantity
+        uint256 price = getPrice(productId, quantity);
+        
+        // get token rate
+        uint256 rate = oracle.getTokenRate(ERC20TokenAddr);
+        
+        uint256 nTokens = price.div(rate);
+        
+        // withdraw tokens
+        ERC20Token.transferFrom(msg.sender, address(0), nTokens);
+        
+        // using ProductLib
+        products[productId].buyProduct(quantity);
+        
+        // log event
+        ProductPurchased(productId, msg.sender, quantity, price);
+    }
+    
+}
+
+import "github.com/oraclize/ethereum-api/oraclizeAPI.sol";
+
+contract ERC20TokenRateOracle is usingOraclize {
+    
+    mapping(address => uint256) public rates;
+    
+    uint256 public ERC20ETH;
+    
+    function ERC20TokenRateOracle() public {
+        update(0);
+    }
+    
+    function __callback(bytes32 id, string result, bytes proof) public {
+        if (msg.sender != oraclize_cbAddress()) revert();
+        ERC20ETH = parseInt(result, 2);
+    }
+    
+    function update(uint delay) payable public {
+        oraclize_query(delay, "URL",
+          "json(https://min-api.cryptocompare.com/data/price?fsym=EOS&tsyms=ETH).ETH");
+    }
+    
+    function getTokenRate(address ERC20TokenAddr) public returns (uint256) {
+        return rates[ERC20TokenAddr];
     }
     
 }
